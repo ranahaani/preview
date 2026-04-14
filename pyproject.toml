@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "md-preview"
+version = "1.0.0"
+description = "Preview and export Claude Code responses as PDF, DOCX, or HTML — zero tokens consumed."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [{name = "Muhammad Abdullah", email = "ranahaani@gmail.com"}]
+keywords = ["claude-code", "markdown", "preview", "pdf", "docx", "cli"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Text Processing :: Markup :: Markdown",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "markdown>=3.5",
+    "weasyprint>=60.0",
+    "python-docx>=1.0",
+]
+
+[project.scripts]
+md-preview = "md_preview.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["md_preview*"]
+
+[project.urls]
+Homepage = "https://github.com/ranahaani/md-preview"
+Repository = "https://github.com/ranahaani/md-preview"
+Issues = "https://github.com/ranahaani/md-preview/issues"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "S", "B", "A", "C4", "SIM"]
+ignore = ["S603", "S607"]
