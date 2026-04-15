@@ -14,6 +14,7 @@ from preview.session import (
     _extract_rich_turns,
     _is_tool_result_entry,
     _project_dir_name,
+    _find_active_session,
 )
 
 
@@ -245,3 +246,48 @@ def test_empty_session():
 def test_only_user_messages():
     session = _make_session([_user("hello"), _user("world")])
     assert _extract_rich_turns(session) == []
+
+
+# ---------------------------------------------------------------------------
+# _find_active_session
+# ---------------------------------------------------------------------------
+
+def test_find_active_session_picks_most_recent(tmp_path):
+    """_find_active_session must return the most recently modified .jsonl."""
+    import time
+
+    proj_a = tmp_path / "projects" / "-proj-a"
+    proj_b = tmp_path / "projects" / "-proj-b"
+    proj_a.mkdir(parents=True)
+    proj_b.mkdir(parents=True)
+
+    old_session = proj_a / "old.jsonl"
+    new_session = proj_b / "new.jsonl"
+
+    # Write older file first
+    old_session.write_text(json.dumps(_assistant_text("old")) + "\n")
+    time.sleep(0.02)
+    new_session.write_text(json.dumps(_assistant_text("new")) + "\n")
+
+    import os
+    os.environ["CLAUDE_CONFIG_DIR"] = str(tmp_path / "projects" / "..")
+    # Patch _discover_project_dirs to return our temp dirs
+    import preview.session as sess
+    orig = sess._discover_project_dirs
+    sess._discover_project_dirs = lambda: [proj_a, proj_b]
+    try:
+        result = _find_active_session()
+        assert result == new_session
+    finally:
+        sess._discover_project_dirs = orig
+
+
+def test_find_active_session_raises_when_no_sessions(tmp_path):
+    import preview.session as sess
+    orig = sess._discover_project_dirs
+    sess._discover_project_dirs = lambda: []
+    try:
+        with pytest.raises(FileNotFoundError):
+            _find_active_session()
+    finally:
+        sess._discover_project_dirs = orig

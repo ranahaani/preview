@@ -80,22 +80,53 @@ def _find_latest_session(project_dir: Path) -> Path | None:
     return sessions[0] if sessions else None
 
 
-def _find_project_dir(cwd: str) -> Path:
+def _find_active_session(cwd: str | None = None) -> Path:
+    """Return the session file Claude Code is actively writing to.
+
+    Primary strategy: pick the globally most-recently-modified .jsonl across
+    all project directories — Claude Code writes to the session file on every
+    message, so the current session always has the freshest mtime.
+
+    CWD validation: if *cwd* is supplied and any of the candidate sessions
+    live in a project dir that matches the CWD ancestry, we restrict the
+    search to those dirs only.  This prevents collisions when a user has
+    multiple concurrent Claude Code windows open in completely different trees.
+    """
     all_dirs = _discover_project_dirs()
-    dir_by_name = {d.name: d for d in all_dirs}
+    if not all_dirs:
+        raise FileNotFoundError("No Claude Code project directories found")
 
-    path = Path(cwd).resolve()
-    while True:
-        name = _project_dir_name(str(path))
-        candidate = dir_by_name.get(name)
-        if candidate is not None and _find_latest_session(candidate) is not None:
-            return candidate
-        parent = path.parent
-        if parent == path:
-            break
-        path = parent
+    # Dirs that match the CWD ancestry (may be empty)
+    cwd_dirs: set[Path] = set()
+    if cwd:
+        dir_by_name = {d.name: d for d in all_dirs}
+        path = Path(cwd).resolve()
+        while True:
+            candidate = dir_by_name.get(_project_dir_name(str(path)))
+            if candidate is not None:
+                cwd_dirs.add(candidate)
+            parent = path.parent
+            if parent == path:
+                break
+            path = parent
 
-    raise FileNotFoundError(f"No Claude Code project found for {cwd}")
+    search_dirs = cwd_dirs if cwd_dirs else set(all_dirs)
+
+    best: Path | None = None
+    best_mtime: float = 0.0
+    for project_dir in search_dirs:
+        for session_file in project_dir.glob("*.jsonl"):
+            try:
+                mtime = session_file.stat().st_mtime
+                if mtime > best_mtime:
+                    best_mtime = mtime
+                    best = session_file
+            except OSError:
+                continue
+
+    if best is None:
+        raise FileNotFoundError(f"No Claude Code session files found (cwd={cwd})")
+    return best
 
 
 # ---------------------------------------------------------------------------
@@ -240,24 +271,19 @@ def _extract_rich_turns(session_path: Path) -> list[RichTurn]:
 # ---------------------------------------------------------------------------
 
 def read_session_rich(count: int = 1, cwd: str | None = None) -> list[RichTurn]:
-    """Return the last `count` substantive RichTurn objects from the current session."""
+    """Return the last `count` RichTurn objects from the current session."""
     cwd = cwd or os.getcwd()
-    project_dir = _find_project_dir(cwd)
-
-    session_path = _find_latest_session(project_dir)
-    if session_path is None:
-        raise FileNotFoundError(f"No session files in {project_dir}")
+    session_path = _find_active_session(cwd)
 
     all_turns = _extract_rich_turns(session_path)
     if not all_turns:
         raise ValueError("No assistant messages found in the current session")
 
-    # Work turns: had tool use, have text, not bare CLI output
-    work_turns = [
+    # All turns with text, excluding bare CLI output lines ("preview → /path")
+    pool = [
         t for t in all_turns
-        if t.had_tool_use and t.texts and not _CLI_OUTPUT.match(t.plain_text())
+        if t.texts and not _CLI_OUTPUT.match(t.plain_text())
     ]
-    pool = work_turns if work_turns else [t for t in all_turns if t.texts]
 
     if not pool:
         raise ValueError("No assistant text found in the current session")
