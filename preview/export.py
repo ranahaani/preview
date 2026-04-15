@@ -13,10 +13,15 @@ from preview.styles import BROWSER_CSS, COPY_BUTTON_JS, DOCUMENT_CSS, HTML_WRAPP
 from preview.session import RichTurn
 
 
-def _rich_or_plain(turns_or_text: list[RichTurn] | str, *, rich: bool = True) -> tuple[str, str]:
+def _rich_or_plain(
+    turns_or_text: list[RichTurn] | str,
+    *,
+    rich: bool = True,
+    session_id: str = "",
+) -> tuple[str, str]:
     """Return (html_body, title) from either rich turns or plain text."""
     if rich and isinstance(turns_or_text, list):
-        body = to_rich_html_body(turns_or_text)
+        body = to_rich_html_body(turns_or_text, session_id=session_id)
         texts = " ".join(t.plain_text() for t in turns_or_text)
         title = extract_title(texts)
     else:
@@ -30,18 +35,18 @@ def _rich_or_plain(turns_or_text: list[RichTurn] | str, *, rich: bool = True) ->
 # HTML / browser
 # ---------------------------------------------------------------------------
 
-def to_html(source: list[RichTurn] | str, output: Path) -> Path:
+def to_html(source: list[RichTurn] | str, output: Path, session_id: str = "") -> Path:
     """Render to a styled HTML file with tool events and copy buttons."""
-    body, title = _rich_or_plain(source)
+    body, title = _rich_or_plain(source, session_id=session_id)
     page = HTML_WRAPPER.format(title=title, css=BROWSER_CSS, body=body, js=COPY_BUTTON_JS)
     output.write_text(page, encoding="utf-8")
     return output
 
 
-def preview_in_browser(source: list[RichTurn] | str) -> Path:
+def preview_in_browser(source: list[RichTurn] | str, session_id: str = "") -> Path:
     """Render to a temp HTML file and open in the default browser."""
     tmp = Path(tempfile.gettempdir()) / "preview.html"
-    to_html(source, tmp)
+    to_html(source, tmp, session_id=session_id)
     webbrowser.open(tmp.as_uri())
     return tmp
 

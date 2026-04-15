@@ -80,27 +80,32 @@ def main(argv: list[str] | None = None) -> None:
     if args.check:
         sys.exit(_check())
 
+    session_id = ""
     if args.input:
         src: Path = args.input.expanduser().resolve()
         if not src.is_file():
             sys.exit(f"error: {src} not found")
         source = src.read_text(encoding="utf-8")
     else:
-        from preview.session import read_session_rich
+        from preview.session import read_session_rich, read_session_id
         try:
             source = read_session_rich(count=args.count)
+            session_id = read_session_id()
         except (FileNotFoundError, ValueError) as e:
             sys.exit(f"error: {e}")
 
     if args.format == "preview":
-        path = preview_in_browser(source)
+        path = preview_in_browser(source, session_id=session_id)
         print(f"preview → {path}")
         return
 
     fmt = args.format
     default_output = Path(f"/tmp/claude-preview.{fmt}")
     output = (args.output or default_output).expanduser().resolve()
-    FORMATS[fmt](source, output)
+    if fmt == "html":
+        FORMATS[fmt](source, output, session_id)
+    else:
+        FORMATS[fmt](source, output)
     print(f"{fmt} → {output}")
 
     if fmt in ("pdf", "docx"):

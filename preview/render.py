@@ -4,21 +4,20 @@ from __future__ import annotations
 
 import html
 import re
-from pathlib import Path
+from datetime import datetime
 
 import markdown as md
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
-from pygments.lexers import BashLexer, TextLexer, get_lexer_for_filename, guess_lexer
+from pygments.lexers import TextLexer, get_lexer_for_filename
 from pygments.util import ClassNotFound
 
 
 # ---------------------------------------------------------------------------
-# Pygments helpers — friendly light theme for all code blocks
+# Pygments helpers
 # ---------------------------------------------------------------------------
 
 _GITHUB_FMT = HtmlFormatter(style="friendly", nowrap=True)
-_BASH_FMT    = HtmlFormatter(style="friendly", nowrap=True)
 
 
 def _highlight_code(code: str, filename: str = "", lang: str = "") -> str:
@@ -30,14 +29,11 @@ def _highlight_code(code: str, filename: str = "", lang: str = "") -> str:
         elif filename:
             lexer = get_lexer_for_filename(filename)
         else:
+            from pygments.lexers import guess_lexer
             lexer = guess_lexer(code)
     except ClassNotFound:
         lexer = TextLexer()
     return highlight(code, lexer, _GITHUB_FMT)
-
-
-def _highlight_bash(cmd: str) -> str:
-    return highlight(cmd, BashLexer(), _BASH_FMT)
 
 
 # ---------------------------------------------------------------------------
@@ -50,7 +46,9 @@ def to_html_body(text: str) -> str:
     text = re.sub(r"- \[ \]", "- ☐", text)
     converter = md.Markdown(
         extensions=["tables", "fenced_code", "codehilite", "nl2br", "sane_lists", "toc"],
-        extension_configs={"codehilite": {"css_class": "highlight", "guess_lang": True, "use_pygments": True}},
+        extension_configs={
+            "codehilite": {"css_class": "highlight", "guess_lang": True, "use_pygments": True}
+        },
     )
     return converter.convert(text)
 
@@ -61,134 +59,86 @@ def extract_title(text: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Tool event rendering
+# Tool icon / label helpers
 # ---------------------------------------------------------------------------
 
-_SVG = {
-    "edit": (
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
-        ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-        '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>'
-        '<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>'
-        '</svg>'
-    ),
-    "write": (
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
-        ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-        '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>'
-        '<polyline points="14 2 14 8 20 8"/>'
-        '<line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>'
-        '</svg>'
-    ),
-    "read": (
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
-        ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-        '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>'
-        '<circle cx="12" cy="12" r="3"/>'
-        '</svg>'
-    ),
-    "bash": (
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
-        ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-        '<polyline points="4 17 10 11 4 5"/>'
-        '<line x1="12" y1="19" x2="20" y2="19"/>'
-        '</svg>'
-    ),
-    "glob": (
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
-        ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-        '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>'
-        '</svg>'
-    ),
-    "grep": (
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
-        ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-        '<circle cx="11" cy="11" r="8"/>'
-        '<line x1="21" y1="21" x2="16.65" y2="16.65"/>'
-        '</svg>'
-    ),
-    "agent": (
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
-        ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-        '<rect x="3" y="3" width="18" height="18" rx="2"/>'
-        '<circle cx="8.5" cy="10" r="1.5"/><circle cx="15.5" cy="10" r="1.5"/>'
-        '<path d="M8 15s1.5 2 4 2 4-2 4-2"/>'
-        '</svg>'
-    ),
-    "web": (
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
-        ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-        '<circle cx="12" cy="12" r="10"/>'
-        '<line x1="2" y1="12" x2="22" y2="12"/>'
-        '<path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>'
-        '</svg>'
-    ),
-    "default": (
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
-        ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-        '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94'
-        'l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'
-        '</svg>'
-    ),
-}
-
-
-def _tool_icon(name: str) -> str:
+def _ms_icon(name: str) -> str:
+    """Return Material Symbols icon name for a tool."""
     n = name.lower()
-    if "edit" in n:   return _SVG["edit"]
-    if "write" in n:  return _SVG["write"]
-    if "read" in n:   return _SVG["read"]
-    if "bash" in n:   return _SVG["bash"]
-    if "glob" in n:   return _SVG["glob"]
-    if "grep" in n:   return _SVG["grep"]
-    if "agent" in n:  return _SVG["agent"]
-    if "web" in n:    return _SVG["web"]
-    return _SVG["default"]
+    if "edit" in n:   return "edit"
+    if "write" in n:  return "description"
+    if "read" in n:   return "visibility"
+    if "bash" in n:   return "terminal"
+    if "glob" in n:   return "folder_open"
+    if "grep" in n:   return "search"
+    if "agent" in n:  return "smart_toy"
+    if "web" in n:    return "public"
+    if "task" in n:   return "task_alt"
+    if "skill" in n:  return "auto_awesome"
+    return "build"
 
 
-def _tool_label(name: str, inputs: dict) -> str:
+def _icon_color(name: str, is_error: bool) -> str:
+    if is_error:
+        return "text-error"
+    n = name.lower()
+    if "edit" in n:   return "text-primary"
+    if "write" in n:  return "text-secondary"
+    if "bash" in n:   return "text-secondary"
+    return "text-outline"
+
+
+def _tool_display(name: str, inputs: dict) -> str:
+    """Return 'Verb: target' label, HTML-escaped."""
     n = name.lower()
     path = inputs.get("file_path") or inputs.get("path") or ""
     if path and ("edit" in n or "write" in n or "read" in n):
-        return f"<code class='tool-path'>{html.escape(path)}</code>"
+        parts = path.replace("\\", "/").split("/")
+        short = "/".join(parts[-2:]) if len(parts) > 2 else path
+        verb = "Edit" if "edit" in n else ("Write" if "write" in n else "Read")
+        return f"{verb}: {html.escape(short)}"
     if "bash" in n:
-        desc = inputs.get("description", "")
-        cmd  = inputs.get("command", "")
-        label = html.escape(desc or cmd[:80])
-        return f"<code class='tool-cmd'>{label}</code>"
+        desc = inputs.get("description", "") or inputs.get("command", "")
+        return f"Bash: {html.escape(str(desc)[:80])}"
     if "glob" in n:
-        return f"<code class='tool-cmd'>{html.escape(inputs.get('pattern', ''))}</code>"
+        return f"Glob: {html.escape(inputs.get('pattern', ''))}"
     if "grep" in n:
-        return f"<code class='tool-cmd'>{html.escape(inputs.get('pattern', ''))}</code>"
+        return f"Search: {html.escape(inputs.get('pattern', ''))}"
+    if "agent" in n:
+        kind = inputs.get("subagent_type") or inputs.get("description", "")
+        return f"Agent: {html.escape(str(kind)[:60])}"
     return html.escape(name)
 
 
-def _render_highlighted_block(code: str, filename: str = "", css_class: str = "tool-file-content") -> str:
-    truncated = code[:3000] + ("\n… (truncated)" if len(code) > 3000 else "")
-    highlighted = _highlight_code(truncated, filename=filename)
-    return f'<div class="{css_class}"><pre class="gh-highlight">{highlighted}</pre></div>'
-
+# ---------------------------------------------------------------------------
+# Tool detail renderers
+# ---------------------------------------------------------------------------
 
 def _render_edit_diff(inputs: dict) -> str:
     old = inputs.get("old_string", "")
     new = inputs.get("new_string", "")
-    path = inputs.get("file_path", "")
     if not old and not new:
         return ""
 
-    def _hl(code: str) -> str:
-        try:
-            return _highlight_code(code, filename=path)
-        except Exception:
-            return html.escape(code)
-
-    out = ['<div class="diff-block">']
-    if old:
-        out.append(f'<div class="diff-removed"><span class="diff-sign">−</span><pre class="gh-highlight">{_hl(old)}</pre></div>')
-    if new:
-        out.append(f'<div class="diff-added"><span class="diff-sign">+</span><pre class="gh-highlight">{_hl(new)}</pre></div>')
-    out.append("</div>")
-    return "\n".join(out)
+    rows: list[str] = [
+        '<div class="mono text-[13px] leading-6 overflow-x-auto terminal-scroll">'
+    ]
+    for i, line in enumerate(old.splitlines(), 1):
+        rows.append(
+            f'<div class="flex bg-red-50 px-4 py-0.5">'
+            f'<span class="w-8 text-red-300 select-none text-right pr-2 shrink-0 tabular-nums">{i}</span>'
+            f'<span class="text-red-600 font-medium whitespace-pre">- {html.escape(line)}</span>'
+            f'</div>'
+        )
+    for i, line in enumerate(new.splitlines(), 1):
+        rows.append(
+            f'<div class="flex bg-green-50 px-4 py-0.5">'
+            f'<span class="w-8 text-green-300 select-none text-right pr-2 shrink-0 tabular-nums">{i}</span>'
+            f'<span class="text-green-700 font-medium whitespace-pre">+ {html.escape(line)}</span>'
+            f'</div>'
+        )
+    rows.append("</div>")
+    return "\n".join(rows)
 
 
 def _render_write_content(inputs: dict) -> str:
@@ -196,96 +146,185 @@ def _render_write_content(inputs: dict) -> str:
     path    = inputs.get("file_path", "")
     if not content:
         return ""
-    return _render_highlighted_block(content, filename=path)
+    truncated = content[:3000] + ("\n… (truncated)" if len(content) > 3000 else "")
+    highlighted = _highlight_code(truncated, filename=path)
+    return (
+        '<div class="overflow-x-auto terminal-scroll border-t border-outline-variant/10 '
+        'bg-surface-container-lowest p-4 max-h-96">'
+        f'<pre class="gh-highlight mono text-[13px] leading-relaxed">{highlighted}</pre>'
+        '</div>'
+    )
 
 
 def _render_bash_detail(inputs: dict, result: str) -> str:
     cmd = inputs.get("command", "")
-    parts = []
+    if not cmd and not result:
+        return ""
+    parts = [
+        '<div class="mx-4 mb-4 rounded-lg bg-inverse-surface p-4 text-[13px] mono '
+        'leading-relaxed terminal-scroll overflow-x-auto shadow-inner">'
+    ]
     if cmd:
-        highlighted = _highlight_bash(cmd)
-        safe_cmd = html.escape(cmd, quote=True)
-        _copy_icon = (
-            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
-            ' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-            '<rect x="9" y="9" width="13" height="13" rx="2"/>'
-            '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'
-            '</svg>'
-        )
-        parts.append(
-            f'<div class="bash-command">'
-            f'<pre class="bash-pre">{highlighted}</pre>'
-            f'<button class="copy-btn" data-copy="{safe_cmd}" title="Copy">{_copy_icon}</button>'
-            f'</div>'
-        )
+        parts.append(f'<div class="text-inverse-on-surface">$ {html.escape(cmd)}</div>')
     if result:
         truncated = result[:3000] + ("\n… (truncated)" if len(result) > 3000 else "")
-        parts.append(f'<div class="bash-output"><pre><code>{html.escape(truncated)}</code></pre></div>')
+        parts.append(
+            f'<div class="mt-2 text-on-primary-fixed-variant whitespace-pre-wrap">'
+            f'{html.escape(truncated)}</div>'
+        )
+    parts.append("</div>")
     return "\n".join(parts)
 
 
-def _render_tool_event(tool) -> str:
-    n = tool.name.lower()
-    icon  = _tool_icon(tool.name)
-    label = _tool_label(tool.name, tool.inputs)
-    error_cls = " tool-error" if tool.is_error else ""
+def _render_generic_result(result: str) -> str:
+    trunc = result[:1000] + ("…" if len(result) > 1000 else "")
+    return (
+        '<div class="p-4 bg-surface-container border-t border-outline-variant/10 '
+        'text-sm mono text-on-surface-variant max-h-48 overflow-y-auto">'
+        f'<pre class="whitespace-pre-wrap m-0">{html.escape(trunc)}</pre></div>'
+    )
 
+
+# ---------------------------------------------------------------------------
+# Tool event card
+# ---------------------------------------------------------------------------
+
+def _render_tool_event(tool) -> str:
+    n         = tool.name.lower()
+    icon      = _ms_icon(tool.name)
+    icon_cls  = _icon_color(tool.name, tool.is_error)
+    label     = _tool_display(tool.name, tool.inputs)
+    toggle_id = f"tool-{id(tool)}"
+
+    # Build collapsible detail
     detail = ""
     if "edit" in n:
         detail = _render_edit_diff(tool.inputs)
     elif "write" in n:
         detail = _render_write_content(tool.inputs)
-    elif "bash" in n:
-        detail = _render_bash_detail(tool.inputs, tool.result)
-    elif tool.result and "read" not in n:
-        trunc = tool.result[:1000] + ("…" if len(tool.result) > 1000 else "")
-        detail = f'<div class="tool-result-text"><pre>{html.escape(trunc)}</pre></div>'
+    elif "bash" in n and not tool.is_error:
+        detail = _render_bash_detail(tool.inputs, tool.result or "")
+    elif tool.result and "read" not in n and "glob" not in n and "grep" not in n and not tool.is_error:
+        detail = _render_generic_result(tool.result)
 
-    toggle_id  = f"tool-{id(tool)}"
-    detail_html = f'<div class="tool-detail" id="{toggle_id}">{detail}</div>' if detail else ""
-    toggle_btn  = (
-        f'<button class="tool-toggle" onclick="toggleDetail(\'{toggle_id}\')" title="Toggle">▾</button>'
+    detail_html = (
+        f'<div class="tool-detail visible" id="{toggle_id}">{detail}</div>'
+        if detail else ""
+    )
+    toggle_btn = (
+        f'<button class="tool-toggle-btn open text-outline text-lg leading-none '
+        f'hover:text-on-surface px-1" onclick="toggleDetail(\'{toggle_id}\')" title="Toggle">▾</button>'
         if detail else ""
     )
 
-    return f"""<div class="tool-event{error_cls}">
-  <div class="tool-header">
-    <span class="tool-icon">{icon}</span>
-    <span class="tool-label">{label}</span>
-    {toggle_btn}
-  </div>
-  {detail_html}
-</div>"""
+    if tool.is_error:
+        error_body = ""
+        if tool.result:
+            trunc = tool.result[:800] + ("…" if len(tool.result) > 800 else "")
+            error_body = (
+                f'<div class="mx-4 mb-3 mt-2 p-4 bg-surface-container-lowest rounded-lg '
+                f'border border-error/10">'
+                f'<pre class="mono text-xs text-error whitespace-pre-wrap m-0">'
+                f'{html.escape(trunc)}</pre></div>'
+                f'<div class="px-4 pb-4">'
+                f'<div class="flex items-center gap-2 text-xs text-on-surface-variant '
+                f'bg-surface-container px-3 py-2 rounded-lg">'
+                f'<span class="material-symbols-outlined text-sm">info</span>'
+                f'<span>Command failed. Check the output above.</span>'
+                f'</div></div>'
+            )
+        return (
+            f'<div class="tool-card mb-4 overflow-hidden rounded-xl '
+            f'bg-error-container/5 border-2 border-error/20">\n'
+            f'  <div class="flex items-center justify-between px-4 py-3 bg-error-container/10">\n'
+            f'    <div class="flex items-center gap-2">\n'
+            f'      <span class="material-symbols-outlined text-error text-lg">error</span>\n'
+            f'      <span class="text-sm font-semibold mono text-error">{label}</span>\n'
+            f'    </div>\n'
+            f'    {toggle_btn}\n'
+            f'  </div>\n'
+            f'  {error_body}\n'
+            f'  {detail_html}\n'
+            f'</div>'
+        )
+
+    badge = (
+        '<span class="text-[10px] font-bold text-outline-variant bg-surface-container '
+        'px-2 py-0.5 rounded uppercase tracking-wide">Done</span>'
+    )
+    return (
+        f'<div class="tool-card mb-4 overflow-hidden rounded-xl bg-surface-container-low">\n'
+        f'  <div class="flex items-center justify-between px-4 py-3 bg-surface-container-high/50">\n'
+        f'    <div class="flex items-center gap-2">\n'
+        f'      <span class="material-symbols-outlined {icon_cls} text-lg">{icon}</span>\n'
+        f'      <span class="text-sm font-semibold mono">{label}</span>\n'
+        f'    </div>\n'
+        f'    <div class="flex items-center gap-2">\n'
+        f'      {badge}\n'
+        f'      {toggle_btn}\n'
+        f'    </div>\n'
+        f'  </div>\n'
+        f'  {detail_html}\n'
+        f'</div>'
+    )
 
 
 # ---------------------------------------------------------------------------
 # Full rich turn rendering
 # ---------------------------------------------------------------------------
 
-def to_rich_html_body(turns: list) -> str:
+def to_rich_html_body(turns: list, session_id: str = "") -> str:
     """Render a list of RichTurn objects to an HTML fragment."""
     sections: list[str] = []
 
+    # Header
+    now = datetime.now().strftime("%b %d, %Y · %I:%M %p")
+    session_line = (
+        f'<p class="text-sm text-on-surface-variant mt-1 font-medium">'
+        f'Session ID: <span class="mono">{html.escape(session_id)}</span></p>'
+        if session_id else ""
+    )
+    sections.append(
+        '<div class="mb-12 border-b border-surface-container-high pb-6">\n'
+        '  <div class="flex justify-between items-end">\n'
+        '    <div>\n'
+        '      <h2 class="text-2xl font-extrabold tracking-tight text-on-surface">'
+        'Claude Code Response</h2>\n'
+        f'      {session_line}\n'
+        '    </div>\n'
+        f'    <div class="text-right">\n'
+        f'      <span class="text-xs uppercase tracking-widest text-outline font-bold">{now}</span>\n'
+        '    </div>\n'
+        '  </div>\n'
+        '</div>'
+    )
+
     for i, turn in enumerate(turns):
-        parts: list[str] = []
+        if i > 0:
+            sections.append(
+                '<div class="relative flex items-center justify-center my-16">\n'
+                '  <div class="absolute inset-0 flex items-center">\n'
+                '    <div class="w-full border-t-2 border-dashed border-surface-container-high"></div>\n'
+                '  </div>\n'
+                '  <div class="relative bg-surface px-6">\n'
+                '    <span class="material-symbols-outlined text-outline text-xl">auto_awesome</span>\n'
+                '  </div>\n'
+                '</div>'
+            )
 
         if turn.texts:
-            # Render each text block independently so markdown structure is
-            # preserved per block (joining 11 blocks into one string breaks lists).
             blocks = [
                 f'<div class="response-block">{to_html_body(blk)}</div>'
                 for blk in turn.texts
                 if blk.strip()
             ]
             if blocks:
-                parts.append(f'<div class="response-text">{"".join(blocks)}</div>')
+                sections.append(
+                    f'<div class="response-text mb-10 space-y-2">{"".join(blocks)}</div>'
+                )
 
         if turn.tools:
             tool_items = "\n".join(_render_tool_event(t) for t in turn.tools)
-            parts.append(f'<div class="tool-list">{tool_items}</div>')
-
-        if parts:
-            sep = '<hr class="turn-sep">' if i > 0 else ""
-            sections.append(f'{sep}<div class="turn">' + "\n".join(parts) + "</div>")
+            sections.append(f'<div class="mb-8">{tool_items}</div>')
 
     return "\n".join(sections)

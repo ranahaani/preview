@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from pygments.formatters import HtmlFormatter
 
-_PYGMENTS_CSS      = HtmlFormatter(style="monokai").get_style_defs(".highlight")
-_GH_DARK_NOWRAP    = HtmlFormatter(style="friendly",    nowrap=True).get_style_defs(".gh-highlight")
-_MONOKAI_NOWRAP    = HtmlFormatter(style="friendly",    nowrap=True).get_style_defs(".bash-pre")
+_PYGMENTS_CSS   = HtmlFormatter(style="monokai").get_style_defs(".highlight")
+_GH_DARK_NOWRAP = HtmlFormatter(style="friendly", nowrap=True).get_style_defs(".gh-highlight")
 
 # ---------------------------------------------------------------------------
-# Full CSS — Georgia serif body, blue headings, Monokai dark code blocks
+# DOCUMENT_CSS — Georgia serif body, blue headings, Monokai dark code blocks
+# (used for PDF export, unchanged)
 # ---------------------------------------------------------------------------
 DOCUMENT_CSS = f"""\
 *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
@@ -150,7 +150,6 @@ blockquote {{
   line-height: 1.55;
 }}
 
-/* Pygments Monokai syntax highlighting */
 {_PYGMENTS_CSS}
 
 .highlight {{
@@ -185,7 +184,6 @@ blockquote {{
   font-size: 8pt;
 }}
 
-/* Inline code */
 code {{
   font-family: 'Courier New', Consolas, monospace;
   font-size: 8.5pt;
@@ -213,383 +211,116 @@ pre:not(.highlight) {{
 """
 
 # ---------------------------------------------------------------------------
-# HTML variant — same design adapted for browser rendering
+# BROWSER_CSS — minimal overrides; Tailwind handles layout/colour tokens
 # ---------------------------------------------------------------------------
 BROWSER_CSS = f"""\
-*, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
-
-body {{
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 17px;
-  line-height: 1.7;
-  color: #1a1a1a;
-  background: #f5f5f0;
-  -webkit-font-smoothing: antialiased;
+body {{ font-family: 'Inter', sans-serif; }}
+.mono {{ font-family: 'JetBrains Mono', monospace; }}
+.material-symbols-outlined {{
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  user-select: none;
 }}
 
-.page {{
-  max-width: 820px;
-  margin: 2.5rem auto;
-  background: #ffffff;
-  padding: 3rem 3.5rem;
+/* Custom scrollbar for terminal blocks */
+.terminal-scroll::-webkit-scrollbar {{ width: 6px; height: 6px; }}
+.terminal-scroll::-webkit-scrollbar-track {{ background: transparent; }}
+.terminal-scroll::-webkit-scrollbar-thumb {{
+  background: rgba(113, 124, 130, 0.2);
+  border-radius: 10px;
+}}
+
+/* ── Markdown content inside .response-text ── */
+.response-text p {{ margin-bottom: 0.75rem; line-height: 1.7; color: #2a3439; }}
+.response-text h1, .response-text h2, .response-text h3, .response-text h4 {{
+  font-weight: 700; color: #2a3439;
+  margin-top: 1.5rem; margin-bottom: 0.5rem; line-height: 1.3;
+}}
+.response-text h1 {{
+  font-size: 1.5rem;
+  border-bottom: 1px solid #e1e9ee;
+  padding-bottom: 0.5rem;
+}}
+.response-text h2 {{ font-size: 1.25rem; color: #005ac2; }}
+.response-text h3 {{ font-size: 1.05rem; color: #004fab; }}
+.response-text code {{
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  background: #e8eff3;
   border-radius: 4px;
-  box-shadow: 0 2px 20px rgba(0,0,0,.08);
+  padding: 1px 6px;
+  color: #005ac2;
 }}
-
-h1, h2, h3, h4 {{
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  font-weight: 700;
-  color: #0d1b2a;
-  line-height: 1.25;
+.response-text pre {{
+  background: #0b0f10;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  margin: 0.75rem 0;
 }}
-
-h1 {{
-  font-size: 2rem;
-  font-weight: 800;
-  margin-top: 0;
-  margin-bottom: .5rem;
-  padding-bottom: .5rem;
-  border-bottom: 3px solid #2563EB;
+.response-text pre code {{
+  background: transparent;
+  color: #f8f8f2;
+  padding: 0;
+  font-size: 0.82rem;
 }}
-
-h2 {{
-  font-size: 1.25rem;
-  color: #2563EB;
-  margin-top: 2rem;
-  margin-bottom: .5rem;
-  padding-bottom: .25rem;
-  border-bottom: 1px solid #93c5fd;
-}}
-
-h3 {{
-  font-size: 1.05rem;
-  color: #1e40af;
-  margin-top: 1.5rem;
-  margin-bottom: .4rem;
-}}
-
-h4 {{
-  font-size: .95rem;
-  color: #374151;
-  margin-top: 1rem;
-  margin-bottom: .3rem;
-}}
-
-hr {{
-  border: none;
-  border-top: 1px solid #93c5fd;
-  margin: 1.5rem 0;
-}}
-
-p {{ margin-bottom: .75rem; }}
-
-strong {{ font-weight: 700; color: #0d1b2a; }}
-em {{ font-style: italic; color: #555; }}
-a {{ color: #2563EB; text-decoration: none; }}
-a:hover {{ text-decoration: underline; }}
-
-ul, ol {{ margin: .25rem 0 .75rem 1.5rem; padding: 0; }}
-ul {{ list-style-type: disc; }}
-ol {{ list-style-type: decimal; }}
-li {{ margin-bottom: .25rem; }}
-
-table {{
-  width: 100%;
-  border-collapse: collapse;
-  margin: .75rem 0 1rem;
-  font-size: .9rem;
-}}
-thead {{ background: #1e3a5f; color: #fff; }}
-thead th {{
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  font-size: .8rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .3px;
-  padding: .5rem .75rem;
-  text-align: left;
-}}
-tbody tr:nth-child(even) {{ background: #eff6ff; }}
-tbody td {{
-  padding: .4rem .75rem;
-  border: 1px solid #bfdbfe;
-  vertical-align: top;
-  color: #1f2937;
-}}
-
-blockquote {{
-  border-left: 3px solid #2563EB;
-  padding: .5rem 1rem;
-  margin: .75rem 0;
-  color: #374151;
+.response-text ul, .response-text ol {{ margin: 0.5rem 0 0.75rem 1.5rem; }}
+.response-text li {{ margin-bottom: 0.25rem; }}
+.response-text blockquote {{
+  border-left: 3px solid #005ac2;
+  padding: 0.5rem 1rem;
+  background: #f0f4f7;
+  margin: 0.75rem 0;
+  color: #566166;
   font-style: italic;
-  background: #eff6ff;
-  border-radius: 0 3px 3px 0;
+  border-radius: 0 4px 4px 0;
+}}
+.response-text a {{ color: #005ac2; text-decoration: underline; }}
+.response-text strong {{ font-weight: 700; color: #2a3439; }}
+.response-text em {{ font-style: italic; color: #566166; }}
+.response-text table {{
+  width: 100%; border-collapse: collapse;
+  margin: 0.75rem 0; font-size: 0.9rem;
+}}
+.response-text thead {{ background: #005ac2; color: white; }}
+.response-text th, .response-text td {{
+  padding: 0.5rem 0.75rem; border: 1px solid #e1e9ee;
+}}
+.response-text tbody tr:nth-child(even) {{ background: #f0f4f7; }}
+.response-text hr {{
+  border: none; border-top: 1px solid #e1e9ee; margin: 1.5rem 0;
 }}
 
-{_PYGMENTS_CSS}
-{_GH_DARK_NOWRAP}
-{_MONOKAI_NOWRAP}
+/* ── Tool detail toggle ── */
+.tool-detail {{ display: none; }}
+.tool-detail.visible {{ display: block; }}
+.tool-toggle-btn {{ transition: transform 0.2s; }}
+.tool-toggle-btn.open {{ transform: rotate(180deg); }}
 
-/* gh-highlight: used inside diff/write/file blocks (light theme) */
-.gh-highlight {{
-  background: transparent;
-  font-family: 'Courier New', Consolas, monospace;
-  font-size: .82rem;
-  line-height: 1.55;
-  white-space: pre-wrap;
-  word-break: break-all;
-  margin: 0;
-  padding: 0;
-  color: #333;
-}}
-
-/* bash-pre: highlighted shell commands (light theme) */
-.bash-pre {{
-  background: transparent;
-  font-family: 'Courier New', Consolas, monospace;
-  font-size: .82rem;
-  line-height: 1.55;
-  white-space: pre-wrap;
-  word-break: break-all;
-  margin: 0;
-  padding: 0;
-  color: #333;
-}}
-
-.highlight {{
-  background: #272822 !important;
-  border-radius: 6px;
-  padding: 1rem 1.25rem;
-  margin: .75rem 0 1rem;
-  font-family: 'Courier New', Consolas, monospace;
-  font-size: .82rem;
-  line-height: 1.55;
-  overflow-x: auto;
-}}
-.highlight pre {{
-  background: transparent !important;
-  border: none !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  color: #f8f8f2;
-  font-size: .82rem;
-}}
-.highlight code {{
-  background: transparent !important;
-  border: none !important;
-  padding: 0 !important;
-  color: inherit;
-  font-size: .82rem;
-}}
-
-code {{
-  font-family: 'Courier New', Consolas, monospace;
-  font-size: .85rem;
-  background: #e5edff;
-  border: 1px solid #93c5fd;
-  border-radius: 3px;
-  padding: 1px 5px;
-  color: #1e40af;
-}}
-pre code {{ background: transparent; border: none; padding: 0; color: inherit; }}
-
-pre:not(.highlight) {{
-  background: #272822;
-  border-radius: 6px;
-  padding: 1rem 1.25rem;
-  margin: .75rem 0 1rem;
-  font-family: 'Courier New', Consolas, monospace;
-  font-size: .82rem;
-  line-height: 1.55;
-  overflow-x: auto;
-  color: #f8f8f2;
-}}
-
-/* ── Copy buttons on code blocks ── */
-.code-wrapper {{
-  position: relative;
-}}
+/* ── Copy buttons ── */
+.code-wrapper {{ position: relative; }}
 .copy-btn {{
-  position: absolute;
-  top: .45rem;
-  right: .5rem;
-  background: rgba(0,0,0,.06);
-  color: #6b7280;
-  border: 1px solid rgba(0,0,0,.12);
-  border-radius: 4px;
-  padding: 4px 5px;
-  line-height: 0;
-  cursor: pointer;
-  transition: background .15s, color .15s;
-  z-index: 10;
-  display: flex;
-  align-items: center;
+  position: absolute; top: 0.45rem; right: 0.5rem;
+  background: rgba(0,0,0,.06); color: #6b7280;
+  border: 1px solid rgba(0,0,0,.12); border-radius: 4px;
+  padding: 4px 5px; line-height: 0; cursor: pointer;
+  transition: background .15s, color .15s; z-index: 10;
+  display: flex; align-items: center;
 }}
 .copy-btn:hover {{ background: rgba(0,0,0,.12); color: #111; }}
 .copy-btn.copied {{ background: #16a34a; color: #fff; border-color: #16a34a; }}
 
-/* ── Tool events ── */
-.tool-list {{
-  margin: 1.25rem 0 .5rem;
-  display: flex;
-  flex-direction: column;
-  gap: .5rem;
+/* ── Pygments in write/read file blocks ── */
+{_GH_DARK_NOWRAP}
+.gh-highlight {{
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem; line-height: 1.55;
+  white-space: pre-wrap; word-break: break-all; color: #333;
 }}
-
-.tool-event {{
-  border: 1px solid #e2e8f0;
-  border-left: 3px solid #93c5fd;
-  border-radius: 0 6px 6px 0;
-  background: #f8faff;
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-  font-size: .85rem;
-}}
-
-.tool-event.tool-error {{
-  border-left-color: #f87171;
-  background: #fff5f5;
-}}
-
-.tool-header {{
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  padding: .45rem .75rem;
-  cursor: default;
-}}
-
-.tool-icon {{
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  color: #6b7280;
-}}
-
-.tool-label {{ flex: 1; color: #374151; }}
-.tool-label code.tool-path {{
-  font-family: 'Courier New', Consolas, monospace;
-  font-size: .8rem;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 3px;
-  padding: 1px 5px;
-  color: #1d4ed8;
-}}
-.tool-label code.tool-cmd {{
-  font-family: 'Courier New', Consolas, monospace;
-  font-size: .8rem;
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  border-radius: 3px;
-  padding: 1px 5px;
-  color: #334155;
-}}
-
-.tool-toggle {{
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #6b7280;
-  font-size: 1rem;
-  padding: 0 .25rem;
-  line-height: 1;
-  transition: transform .2s;
-}}
-.tool-toggle.open {{ transform: rotate(180deg); }}
-
-.tool-detail {{
-  display: none;
-  border-top: 1px solid #e2e8f0;
-}}
-.tool-detail.visible {{ display: block; }}
-
-/* Diff */
-.diff-block {{ font-family: 'Courier New', Consolas, monospace; font-size: .78rem; }}
-.diff-removed {{
-  background: #fef2f2;
-  border-top: 1px solid #fecaca;
-  padding: .5rem .75rem;
-  display: flex;
-  gap: .5rem;
-}}
-.diff-added {{
-  background: #f0fdf4;
-  border-top: 1px solid #bbf7d0;
-  padding: .5rem .75rem;
-  display: flex;
-  gap: .5rem;
-}}
-.diff-sign {{
-  font-weight: 700;
-  font-size: 1rem;
-  flex-shrink: 0;
-  margin-top: .1rem;
-  user-select: none;
-}}
-.diff-removed .diff-sign {{ color: #dc2626; }}
-.diff-added  .diff-sign  {{ color: #16a34a; }}
-.diff-removed pre.gh-highlight,
-.diff-added   pre.gh-highlight {{
-  margin: 0; background: transparent; padding: 0; flex: 1;
-}}
-
-/* Bash detail */
-.bash-command {{
-  position: relative;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
-  padding: .6rem .75rem;
-  border-radius: 0;
-}}
-.bash-command pre.bash-pre {{
-  margin: 0; background: transparent; padding: 0;
-}}
-.bash-command .copy-btn {{
-  position: absolute; top: .35rem; right: .5rem;
-}}
-.bash-output {{
-  background: #fafafa;
-  border-top: 1px solid #f0f0f0;
-  padding: .6rem .75rem;
-  max-height: 280px;
-  overflow-y: auto;
-}}
-.bash-output pre {{
-  margin: 0; background: transparent; padding: 0;
-  color: #374151; font-size: .78rem; line-height: 1.5; white-space: pre-wrap;
-}}
-
-/* File content */
-.tool-file-content {{
-  background: #fafafa;
-  border-top: 1px solid #e5e7eb;
-  padding: .6rem .75rem;
-  max-height: 400px;
-  overflow-y: auto;
-  border-radius: 0 0 6px 6px;
-}}
-.tool-file-content pre.gh-highlight {{
-  margin: 0; background: transparent; padding: 0;
-}}
-
-.tool-result-text {{
-  padding: .5rem .75rem;
-  background: #f9fafb;
-  font-size: .8rem; color: #374151;
-}}
-.tool-result-text pre {{
-  margin: 0; background: transparent; white-space: pre-wrap;
-  font-family: 'Courier New', Consolas, monospace; font-size: .78rem;
-}}
-
-.turn-sep {{ border: none; border-top: 2px dashed #bfdbfe; margin: 2rem 0; }}
-
-/* Individual text blocks within a turn — slight gap between them */
-.response-block {{ margin-bottom: .25rem; }}
-.response-block:last-child {{ margin-bottom: 0; }}
 """
 
+# ---------------------------------------------------------------------------
+# JS — toggle + copy buttons
+# ---------------------------------------------------------------------------
 COPY_BUTTON_JS = """\
 <script>
 var _ICON_COPY = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
@@ -597,7 +328,8 @@ var _ICON_CHECK = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" s
 
 function toggleDetail(id) {
   var el = document.getElementById(id);
-  var btn = el.previousElementSibling ? el.parentElement.querySelector('.tool-toggle') : null;
+  if (!el) return;
+  var btn = el.closest('.tool-card') && el.closest('.tool-card').querySelector('.tool-toggle-btn');
   if (el.classList.contains('visible')) {
     el.classList.remove('visible');
     if (btn) btn.classList.remove('open');
@@ -614,9 +346,8 @@ function _flashCopied(btn) {
 }
 
 function attachCopyButtons() {
-  // Code blocks
   document.querySelectorAll('pre').forEach(function(pre) {
-    if (pre.closest('.bash-command')) return; // already has button
+    if (pre.closest('.bash-command')) return;
     var wrapper = document.createElement('div');
     wrapper.className = 'code-wrapper';
     wrapper.style.position = 'relative';
@@ -633,7 +364,6 @@ function attachCopyButtons() {
     wrapper.appendChild(btn);
   });
 
-  // Bash command copy buttons (data-copy attr)
   document.querySelectorAll('button[data-copy]').forEach(function(btn) {
     btn.innerHTML = _ICON_COPY;
     btn.title = 'Copy';
@@ -646,23 +376,107 @@ function attachCopyButtons() {
 document.addEventListener('DOMContentLoaded', attachCopyButtons);
 </script>"""
 
+# ---------------------------------------------------------------------------
+# HTML wrapper — Tailwind CDN + Google Fonts + Material Symbols
+# ---------------------------------------------------------------------------
 HTML_WRAPPER = """\
 <!DOCTYPE html>
-<html lang="en">
+<html class="light" lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{title}</title>
-<style>{css}</style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {{
+  darkMode: "class",
+  theme: {{
+    extend: {{
+      colors: {{
+        "tertiary": "#006d4a",
+        "surface-container-highest": "#d9e4ea",
+        "surface-dim": "#cfdce3",
+        "secondary-fixed-dim": "#c7d5ed",
+        "surface-container-low": "#f0f4f7",
+        "on-tertiary-fixed-variant": "#006544",
+        "surface-container-high": "#e1e9ee",
+        "primary-dim": "#004fab",
+        "outline": "#717c82",
+        "inverse-primary": "#4d8eff",
+        "on-primary-fixed": "#003c86",
+        "primary": "#005ac2",
+        "on-tertiary-container": "#005a3c",
+        "secondary": "#526074",
+        "error": "#9f403d",
+        "surface-variant": "#d9e4ea",
+        "on-secondary-fixed": "#324053",
+        "inverse-surface": "#0b0f10",
+        "on-surface": "#2a3439",
+        "surface-bright": "#f7f9fb",
+        "secondary-container": "#d5e3fc",
+        "on-background": "#2a3439",
+        "secondary-dim": "#465468",
+        "tertiary-fixed-dim": "#58e7ab",
+        "background": "#f7f9fb",
+        "tertiary-dim": "#005f40",
+        "on-primary": "#f7f7ff",
+        "surface-tint": "#005ac2",
+        "on-surface-variant": "#566166",
+        "tertiary-fixed": "#69f6b8",
+        "tertiary-container": "#69f6b8",
+        "on-secondary-container": "#455367",
+        "surface": "#f7f9fb",
+        "surface-container-lowest": "#ffffff",
+        "error-dim": "#4e0309",
+        "on-primary-fixed-variant": "#0057bd",
+        "surface-container": "#e8eff3",
+        "primary-fixed": "#d8e2ff",
+        "outline-variant": "#a9b4b9",
+        "on-primary-container": "#004eaa",
+        "on-secondary": "#f8f8ff",
+        "error-container": "#fe8983",
+        "on-error-container": "#752121",
+        "on-error": "#fff7f6",
+        "on-tertiary": "#e6ffee",
+        "primary-fixed-dim": "#c3d4ff",
+        "primary-container": "#d8e2ff",
+        "on-tertiary-fixed": "#00452d",
+        "on-secondary-fixed-variant": "#4e5c71",
+        "inverse-on-surface": "#9a9d9f",
+        "secondary-fixed": "#d5e3fc"
+      }},
+      borderRadius: {{
+        "DEFAULT": "0.125rem",
+        "lg": "0.25rem",
+        "xl": "0.5rem",
+        "full": "0.75rem"
+      }},
+      fontFamily: {{
+        headline: ["Inter", "sans-serif"],
+        body: ["Inter", "sans-serif"],
+        label: ["Inter", "sans-serif"],
+        mono: ["JetBrains Mono", "monospace"]
+      }}
+    }}
+  }}
+}}
+</script>
+<style>
+{css}
+</style>
 </head>
-<body>
-<div class="page">
+<body class="bg-surface text-on-surface antialiased">
+<main class="pt-12 pb-20 px-6 sm:px-12 flex justify-center">
+<div class="max-w-[800px] w-full">
 {body}
 </div>
+</main>
 {js}
 </body>
 </html>"""
 
 # Keep old names as aliases so nothing breaks
-GITHUB_CSS = BROWSER_CSS
+GITHUB_CSS  = BROWSER_CSS
 PYGMENTS_CSS = _PYGMENTS_CSS

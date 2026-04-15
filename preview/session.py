@@ -275,6 +275,16 @@ def _is_partial_turn(turn: RichTurn) -> bool:
     return bool(turn.tools) and turn.tools[-1].result == ""
 
 
+def read_session_id(cwd: str | None = None) -> str:
+    """Return a short session identifier derived from the active session filename."""
+    cwd = cwd or os.getcwd()
+    try:
+        path = _find_active_session(cwd)
+        return path.stem[:12]   # first 12 chars of the UUID-like filename
+    except FileNotFoundError:
+        return ""
+
+
 def read_session_rich(count: int = 1, cwd: str | None = None) -> list[RichTurn]:
     """Return the last `count` RichTurn objects from the current session."""
     cwd = cwd or os.getcwd()
