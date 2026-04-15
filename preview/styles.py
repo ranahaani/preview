@@ -412,18 +412,19 @@ pre:not(.highlight) {{
 }}
 .copy-btn {{
   position: absolute;
-  top: .5rem;
+  top: .45rem;
   right: .5rem;
   background: rgba(0,0,0,.06);
-  color: #555;
+  color: #6b7280;
   border: 1px solid rgba(0,0,0,.12);
   border-radius: 4px;
-  padding: 2px 8px;
-  font-size: .72rem;
-  font-family: 'Helvetica Neue', Arial, sans-serif;
+  padding: 4px 5px;
+  line-height: 0;
   cursor: pointer;
   transition: background .15s, color .15s;
   z-index: 10;
+  display: flex;
+  align-items: center;
 }}
 .copy-btn:hover {{ background: rgba(0,0,0,.12); color: #111; }}
 .copy-btn.copied {{ background: #16a34a; color: #fff; border-color: #16a34a; }}
@@ -587,6 +588,9 @@ pre:not(.highlight) {{
 
 COPY_BUTTON_JS = """\
 <script>
+var _ICON_COPY = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+var _ICON_CHECK = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
 function toggleDetail(id) {
   var el = document.getElementById(id);
   var btn = el.previousElementSibling ? el.parentElement.querySelector('.tool-toggle') : null;
@@ -597,6 +601,12 @@ function toggleDetail(id) {
     el.classList.add('visible');
     if (btn) btn.classList.add('open');
   }
+}
+
+function _flashCopied(btn) {
+  btn.innerHTML = _ICON_CHECK;
+  btn.classList.add('copied');
+  setTimeout(function() { btn.innerHTML = _ICON_COPY; btn.classList.remove('copied'); }, 1800);
 }
 
 function attachCopyButtons() {
@@ -610,26 +620,21 @@ function attachCopyButtons() {
     wrapper.appendChild(pre);
     var btn = document.createElement('button');
     btn.className = 'copy-btn';
-    btn.textContent = 'Copy';
+    btn.innerHTML = _ICON_COPY;
+    btn.title = 'Copy';
     btn.addEventListener('click', function() {
       var code = pre.querySelector('code') || pre;
-      navigator.clipboard.writeText(code.innerText).then(function() {
-        btn.textContent = 'Copied!';
-        btn.classList.add('copied');
-        setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
-      });
+      navigator.clipboard.writeText(code.innerText).then(function() { _flashCopied(btn); });
     });
     wrapper.appendChild(btn);
   });
 
   // Bash command copy buttons (data-copy attr)
   document.querySelectorAll('button[data-copy]').forEach(function(btn) {
+    btn.innerHTML = _ICON_COPY;
+    btn.title = 'Copy';
     btn.addEventListener('click', function() {
-      navigator.clipboard.writeText(btn.dataset.copy).then(function() {
-        btn.textContent = 'Copied!';
-        btn.classList.add('copied');
-        setTimeout(function() { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
-      });
+      navigator.clipboard.writeText(btn.dataset.copy).then(function() { _flashCopied(btn); });
     });
   });
 }
