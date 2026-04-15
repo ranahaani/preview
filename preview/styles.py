@@ -5,8 +5,8 @@ from __future__ import annotations
 from pygments.formatters import HtmlFormatter
 
 _PYGMENTS_CSS      = HtmlFormatter(style="monokai").get_style_defs(".highlight")
-_GH_DARK_NOWRAP    = HtmlFormatter(style="github-dark", nowrap=True).get_style_defs(".gh-highlight")
-_MONOKAI_NOWRAP    = HtmlFormatter(style="monokai",     nowrap=True).get_style_defs(".bash-pre")
+_GH_DARK_NOWRAP    = HtmlFormatter(style="friendly",    nowrap=True).get_style_defs(".gh-highlight")
+_MONOKAI_NOWRAP    = HtmlFormatter(style="friendly",    nowrap=True).get_style_defs(".bash-pre")
 
 # ---------------------------------------------------------------------------
 # Full CSS — Georgia serif body, blue headings, Monokai dark code blocks
@@ -331,7 +331,7 @@ blockquote {{
 {_GH_DARK_NOWRAP}
 {_MONOKAI_NOWRAP}
 
-/* gh-highlight: used inside diff/write/file blocks */
+/* gh-highlight: used inside diff/write/file blocks (light theme) */
 .gh-highlight {{
   background: transparent;
   font-family: 'Courier New', Consolas, monospace;
@@ -341,9 +341,10 @@ blockquote {{
   word-break: break-all;
   margin: 0;
   padding: 0;
+  color: #333;
 }}
 
-/* bash-pre: monokai-highlighted shell commands */
+/* bash-pre: highlighted shell commands (light theme) */
 .bash-pre {{
   background: transparent;
   font-family: 'Courier New', Consolas, monospace;
@@ -353,6 +354,7 @@ blockquote {{
   word-break: break-all;
   margin: 0;
   padding: 0;
+  color: #333;
 }}
 
 .highlight {{
@@ -412,9 +414,9 @@ pre:not(.highlight) {{
   position: absolute;
   top: .5rem;
   right: .5rem;
-  background: rgba(255,255,255,.12);
-  color: #ccc;
-  border: 1px solid rgba(255,255,255,.2);
+  background: rgba(0,0,0,.06);
+  color: #555;
+  border: 1px solid rgba(0,0,0,.12);
   border-radius: 4px;
   padding: 2px 8px;
   font-size: .72rem;
@@ -423,7 +425,7 @@ pre:not(.highlight) {{
   transition: background .15s, color .15s;
   z-index: 10;
 }}
-.copy-btn:hover {{ background: rgba(255,255,255,.25); color: #fff; }}
+.copy-btn:hover {{ background: rgba(0,0,0,.12); color: #111; }}
 .copy-btn.copied {{ background: #16a34a; color: #fff; border-color: #16a34a; }}
 
 /* ── Tool events ── */
@@ -456,25 +458,31 @@ pre:not(.highlight) {{
   cursor: default;
 }}
 
-.tool-icon {{ font-size: 1rem; flex-shrink: 0; }}
+.tool-icon {{
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  color: #6b7280;
+}}
 
 .tool-label {{ flex: 1; color: #374151; }}
 .tool-label code.tool-path {{
   font-family: 'Courier New', Consolas, monospace;
   font-size: .8rem;
-  background: #e0e7ff;
-  border: 1px solid #c7d2fe;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
   border-radius: 3px;
   padding: 1px 5px;
-  color: #3730a3;
+  color: #1d4ed8;
 }}
 .tool-label code.tool-cmd {{
   font-family: 'Courier New', Consolas, monospace;
   font-size: .8rem;
-  background: #1e1e1e;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
   border-radius: 3px;
   padding: 1px 5px;
-  color: #a5f3fc;
+  color: #334155;
 }}
 
 .tool-toggle {{
@@ -498,15 +506,15 @@ pre:not(.highlight) {{
 /* Diff */
 .diff-block {{ font-family: 'Courier New', Consolas, monospace; font-size: .78rem; }}
 .diff-removed {{
-  background: #1a0a0e;
-  border-top: 1px solid #3d1a1e;
+  background: #fef2f2;
+  border-top: 1px solid #fecaca;
   padding: .5rem .75rem;
   display: flex;
   gap: .5rem;
 }}
 .diff-added {{
-  background: #0a1a0f;
-  border-top: 1px solid #1a3d20;
+  background: #f0fdf4;
+  border-top: 1px solid #bbf7d0;
   padding: .5rem .75rem;
   display: flex;
   gap: .5rem;
@@ -518,8 +526,8 @@ pre:not(.highlight) {{
   margin-top: .1rem;
   user-select: none;
 }}
-.diff-removed .diff-sign {{ color: #f87171; }}
-.diff-added  .diff-sign  {{ color: #4ade80; }}
+.diff-removed .diff-sign {{ color: #dc2626; }}
+.diff-added  .diff-sign  {{ color: #16a34a; }}
 .diff-removed pre.gh-highlight,
 .diff-added   pre.gh-highlight {{
   margin: 0; background: transparent; padding: 0; flex: 1;
@@ -528,7 +536,8 @@ pre:not(.highlight) {{
 /* Bash detail */
 .bash-command {{
   position: relative;
-  background: #0d1117;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
   padding: .6rem .75rem;
   border-radius: 0;
 }}
@@ -539,19 +548,21 @@ pre:not(.highlight) {{
   position: absolute; top: .35rem; right: .5rem;
 }}
 .bash-output {{
-  background: #111;
+  background: #fafafa;
+  border-top: 1px solid #f0f0f0;
   padding: .6rem .75rem;
   max-height: 280px;
   overflow-y: auto;
 }}
 .bash-output pre {{
   margin: 0; background: transparent; padding: 0;
-  color: #d4d4d4; font-size: .78rem; line-height: 1.5; white-space: pre-wrap;
+  color: #374151; font-size: .78rem; line-height: 1.5; white-space: pre-wrap;
 }}
 
 /* File content */
 .tool-file-content {{
-  background: #0d1117;
+  background: #fafafa;
+  border-top: 1px solid #e5e7eb;
   padding: .6rem .75rem;
   max-height: 400px;
   overflow-y: auto;

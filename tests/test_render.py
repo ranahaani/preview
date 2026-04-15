@@ -63,10 +63,10 @@ def test_to_html_body_checkbox_conversion():
 # _tool_icon
 # ---------------------------------------------------------------------------
 
-def test_tool_icon_edit():    assert _tool_icon("Edit") == "✏️"
-def test_tool_icon_write():   assert _tool_icon("Write") == "📝"
-def test_tool_icon_bash():    assert _tool_icon("Bash") == "▶"
-def test_tool_icon_unknown(): assert _tool_icon("Unknown") == "🔧"
+def test_tool_icon_edit():    assert "svg" in _tool_icon("Edit")
+def test_tool_icon_write():   assert "svg" in _tool_icon("Write")
+def test_tool_icon_bash():    assert "svg" in _tool_icon("Bash")
+def test_tool_icon_unknown(): assert "svg" in _tool_icon("Unknown")
 
 
 # ---------------------------------------------------------------------------
@@ -75,8 +75,9 @@ def test_tool_icon_unknown(): assert _tool_icon("Unknown") == "🔧"
 
 def test_tool_label_edit():
     out = _tool_label("Edit", {"file_path": "foo.py"})
-    assert "Edited" in out
     assert "foo.py" in out
+    # no action verb
+    assert "Edited" not in out
 
 
 def test_tool_label_bash_uses_description():
