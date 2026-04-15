@@ -1,73 +1,59 @@
 ---
-description: "Preview or export the last response as PDF, DOCX, HTML, or rendered browser preview. Zero tokens consumed — runs locally."
+description: "Preview or export the last assistant response as browser page, PDF, DOCX, HTML, or Markdown."
 ---
 
 # /preview
 
-Export the last assistant response. Runs entirely on your machine — no API calls, no tokens.
+Run the `preview` CLI. It reads the last assistant response directly from the Claude Code session files — no manual extraction needed.
 
-## Usage
+## Arguments
 
-```
-/preview              → open in browser
-/preview pdf          → export as PDF
-/preview docx         → export as Word document
-/preview html         → save as HTML file
-/preview md           → save as Markdown file
-/preview 3            → last 3 responses in browser
-/preview 3 pdf        → last 3 responses as PDF
-```
+`$ARGUMENTS` contains the user's input after `/preview`.
 
-## Process
+- Empty → open in default browser
+- `pdf` → export as PDF
+- `docx` → export as Word document
+- `html` → save as HTML file
+- `md` → save as Markdown file
+- Leading number (e.g. `3`, `3 pdf`) → capture last N assistant messages
+
+## Steps
 
 ### 1. Parse arguments
 
-- No args → browser preview
-- Format keyword (`pdf`, `docx`, `html`, `md`) → that format
-- Leading number → capture last N assistant messages
+Extract optional count (leading number) and format from `$ARGUMENTS`.
 
-### 2. Capture content
-
-Collect the most recent assistant message(s) before this command was invoked. Strip all tool call metadata — only include visible text content.
-
-### 3. Write temp input
-
-Write captured content to `/tmp/preview-input.md`.
-
-### 4. Convert
-
-Run `preview` CLI:
+### 2. Run the CLI
 
 ```bash
-# browser (default)
-preview /tmp/preview-input.md
+# default — last response in browser
+preview
 
-# export formats
-preview /tmp/preview-input.md -f pdf -o /tmp/claude-preview.pdf
-preview /tmp/preview-input.md -f docx -o /tmp/claude-preview.docx
-preview /tmp/preview-input.md -f html -o /tmp/claude-preview.html
-preview /tmp/preview-input.md -f md -o /tmp/claude-preview.md
+# with count
+preview -n 3
+
+# with format
+preview -f pdf -o /tmp/claude-preview.pdf
+preview -f docx -o /tmp/claude-preview.docx
+preview -f html -o /tmp/claude-preview.html
+preview -f md -o /tmp/claude-preview.md
+
+# count + format
+preview -n 3 -f pdf -o /tmp/claude-preview.pdf
 ```
 
-### 5. Confirm
+### 3. Confirm
 
-One line:
-
-```
-preview → /tmp/preview.html
-```
+Print one line with the output path. Nothing else.
 
 ## Fallback
 
-If `preview` is not installed, write a self-contained HTML file directly using the markdown content embedded in a `<script>` tag with marked.js and highlight.js CDN links. Then open with the system browser. Print:
-
-```
-preview not found — used inline fallback. Install for PDF/DOCX: pip install preview
-```
+If `preview` CLI is not found:
+- Print: `preview CLI not found. Install: pip install git+https://github.com/ranahaani/preview.git`
 
 ## Rules
 
-- Overwrite temp files each time
-- Do not ask for confirmation
-- Do not interrupt the active task
-- Read-only — never modify project files
+- Do NOT ask for confirmation — just do it
+- Do NOT explain what you're doing — just output the result line
+- Do NOT manually extract conversation content — the CLI reads session files directly
+- Never modify project files

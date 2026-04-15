@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import platform
-import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -43,7 +42,7 @@ def _check() -> int:
         print(f"fix:     pip install {' '.join(missing)}")
         return 1
 
-    print("all dependencies installed ✓")
+    print("all dependencies installed")
     return 0
 
 
@@ -52,7 +51,19 @@ def main(argv: list[str] | None = None) -> None:
         prog="preview",
         description="Preview and export Markdown as PDF, DOCX, HTML, or browser preview.",
     )
-    parser.add_argument("input", type=Path, help="Markdown file to process")
+    parser.add_argument("input", nargs="?", type=Path, help="Markdown file to process")
+    parser.add_argument(
+        "-s", "--session",
+        action="store_true",
+        help="read from the current Claude Code session instead of a file",
+    )
+    parser.add_argument(
+        "-n", "--count",
+        type=int,
+        default=1,
+        metavar="N",
+        help="number of recent assistant messages to capture (default: 1)",
+    )
     parser.add_argument(
         "-f", "--format",
         choices=["pdf", "docx", "html", "md", "preview"],
@@ -69,20 +80,27 @@ def main(argv: list[str] | None = None) -> None:
     if args.check:
         sys.exit(_check())
 
-    src: Path = args.input.expanduser().resolve()
-    if not src.is_file():
-        sys.exit(f"error: {src} not found")
-
-    text = src.read_text(encoding="utf-8")
+    if args.input:
+        src: Path = args.input.expanduser().resolve()
+        if not src.is_file():
+            sys.exit(f"error: {src} not found")
+        source = src.read_text(encoding="utf-8")
+    else:
+        from preview.session import read_session_rich
+        try:
+            source = read_session_rich(count=args.count)
+        except (FileNotFoundError, ValueError) as e:
+            sys.exit(f"error: {e}")
 
     if args.format == "preview":
-        path = preview_in_browser(text)
+        path = preview_in_browser(source)
         print(f"preview → {path}")
         return
 
     fmt = args.format
-    output = (args.output or src.with_suffix(f".{fmt}")).expanduser().resolve()
-    FORMATS[fmt](text, output)
+    default_output = Path(f"/tmp/claude-preview.{fmt}")
+    output = (args.output or default_output).expanduser().resolve()
+    FORMATS[fmt](source, output)
     print(f"{fmt} → {output}")
 
     if fmt in ("pdf", "docx"):
