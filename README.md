@@ -18,6 +18,10 @@
 
 ---
 
+![preview demo](preview.gif)
+
+---
+
 ## Why
 
 Claude Code outputs raw text in the terminal. That's fine for quick answers, but falls apart when Claude just:
