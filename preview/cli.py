@@ -9,8 +9,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from md_preview import __version__
-from md_preview.export import FORMATS, preview_in_browser
+from preview import __version__
+from preview.export import FORMATS, preview_in_browser
 
 
 def _open_file(path: Path) -> None:
@@ -49,7 +49,7 @@ def _check() -> int:
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
-        prog="md-preview",
+        prog="preview",
         description="Preview and export Markdown as PDF, DOCX, HTML, or browser preview.",
     )
     parser.add_argument("input", type=Path, help="Markdown file to process")

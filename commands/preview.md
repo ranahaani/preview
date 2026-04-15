@@ -32,21 +32,21 @@ Collect the most recent assistant message(s) before this command was invoked. St
 
 ### 3. Write temp input
 
-Write captured content to `/tmp/md-preview-input.md`.
+Write captured content to `/tmp/preview-input.md`.
 
 ### 4. Convert
 
-Run `md-preview` CLI:
+Run `preview` CLI:
 
 ```bash
 # browser (default)
-md-preview /tmp/md-preview-input.md
+preview /tmp/preview-input.md
 
 # export formats
-md-preview /tmp/md-preview-input.md -f pdf -o /tmp/claude-preview.pdf
-md-preview /tmp/md-preview-input.md -f docx -o /tmp/claude-preview.docx
-md-preview /tmp/md-preview-input.md -f html -o /tmp/claude-preview.html
-md-preview /tmp/md-preview-input.md -f md -o /tmp/claude-preview.md
+preview /tmp/preview-input.md -f pdf -o /tmp/claude-preview.pdf
+preview /tmp/preview-input.md -f docx -o /tmp/claude-preview.docx
+preview /tmp/preview-input.md -f html -o /tmp/claude-preview.html
+preview /tmp/preview-input.md -f md -o /tmp/claude-preview.md
 ```
 
 ### 5. Confirm
@@ -54,15 +54,15 @@ md-preview /tmp/md-preview-input.md -f md -o /tmp/claude-preview.md
 One line:
 
 ```
-preview → /tmp/md-preview.html
+preview → /tmp/preview.html
 ```
 
 ## Fallback
 
-If `md-preview` is not installed, write a self-contained HTML file directly using the markdown content embedded in a `<script>` tag with marked.js and highlight.js CDN links. Then open with the system browser. Print:
+If `preview` is not installed, write a self-contained HTML file directly using the markdown content embedded in a `<script>` tag with marked.js and highlight.js CDN links. Then open with the system browser. Print:
 
 ```
-md-preview not found — used inline fallback. Install for PDF/DOCX: pip install md-preview
+preview not found — used inline fallback. Install for PDF/DOCX: pip install preview
 ```
 
 ## Rules

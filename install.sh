@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# md-preview installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/ranahaani/md-preview/main/install.sh | bash
+# preview installer
+# Usage: curl -fsSL https://raw.githubusercontent.com/ranahaani/preview/main/install.sh | bash
 
-REPO="ranahaani/md-preview"
+REPO="ranahaani/preview"
 BRANCH="main"
 RAW="https://raw.githubusercontent.com/${REPO}/${BRANCH}"
 COMMANDS_DIR="${HOME}/.claude/commands"
@@ -38,14 +38,14 @@ for cmd in pip3 pip; do
 done
 [ -n "$PIP" ] || PIP="$PYTHON -m pip"
 
-# ── Install md-preview package ─────────────────────────────────────────────
-info "Installing md-preview..."
+# ── Install preview package ─────────────────────────────────────────────
+info "Installing preview..."
 if $PIP install "git+https://github.com/${REPO}.git" --quiet 2>/dev/null; then
-  ok "md-preview installed"
+  ok "preview installed"
 elif $PIP install "git+https://github.com/${REPO}.git" --quiet --user 2>/dev/null; then
-  ok "md-preview installed (user)"
+  ok "preview installed (user)"
 elif $PIP install "git+https://github.com/${REPO}.git" --quiet --break-system-packages 2>/dev/null; then
-  ok "md-preview installed (system)"
+  ok "preview installed (system)"
 else
   fail "pip install failed. Try: pip install git+https://github.com/${REPO}.git"
 fi

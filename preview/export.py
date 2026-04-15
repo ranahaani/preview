@@ -8,8 +8,8 @@ import webbrowser
 from pathlib import Path
 from typing import Callable
 
-from md_preview.render import extract_title, to_html_body
-from md_preview.styles import GITHUB_CSS, HTML_WRAPPER
+from preview.render import extract_title, to_html_body
+from preview.styles import GITHUB_CSS, HTML_WRAPPER
 
 
 def to_html(text: str, output: Path) -> Path:
@@ -91,7 +91,7 @@ def to_md(text: str, output: Path) -> Path:
 
 def preview_in_browser(text: str) -> Path:
     """Render to a temp HTML file and open in the default browser."""
-    tmp = Path(tempfile.gettempdir()) / "md-preview.html"
+    tmp = Path(tempfile.gettempdir()) / "preview.html"
     to_html(text, tmp)
     webbrowser.open(tmp.as_uri())
     return tmp
