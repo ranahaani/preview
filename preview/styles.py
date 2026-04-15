@@ -584,6 +584,10 @@ pre:not(.highlight) {{
 }}
 
 .turn-sep {{ border: none; border-top: 2px dashed #bfdbfe; margin: 2rem 0; }}
+
+/* Individual text blocks within a turn — slight gap between them */
+.response-block {{ margin-bottom: .25rem; }}
+.response-block:last-child {{ margin-bottom: 0; }}
 """
 
 COPY_BUTTON_JS = """\

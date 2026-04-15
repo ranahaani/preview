@@ -270,6 +270,11 @@ def _extract_rich_turns(session_path: Path) -> list[RichTurn]:
 # Public API
 # ---------------------------------------------------------------------------
 
+def _is_partial_turn(turn: RichTurn) -> bool:
+    """True when the last tool in this turn has no result yet (still in progress)."""
+    return bool(turn.tools) and turn.tools[-1].result == ""
+
+
 def read_session_rich(count: int = 1, cwd: str | None = None) -> list[RichTurn]:
     """Return the last `count` RichTurn objects from the current session."""
     cwd = cwd or os.getcwd()
@@ -279,10 +284,11 @@ def read_session_rich(count: int = 1, cwd: str | None = None) -> list[RichTurn]:
     if not all_turns:
         raise ValueError("No assistant messages found in the current session")
 
-    # All turns with text, excluding bare CLI output lines ("preview → /path")
     pool = [
         t for t in all_turns
-        if t.texts and not _CLI_OUTPUT.match(t.plain_text())
+        if t.texts
+        and not _CLI_OUTPUT.match(t.plain_text())
+        and not _is_partial_turn(t)       # skip the in-progress turn
     ]
 
     if not pool:

@@ -270,8 +270,15 @@ def to_rich_html_body(turns: list) -> str:
         parts: list[str] = []
 
         if turn.texts:
-            md_text = "\n\n".join(turn.texts)
-            parts.append(f'<div class="response-text">{to_html_body(md_text)}</div>')
+            # Render each text block independently so markdown structure is
+            # preserved per block (joining 11 blocks into one string breaks lists).
+            blocks = [
+                f'<div class="response-block">{to_html_body(blk)}</div>'
+                for blk in turn.texts
+                if blk.strip()
+            ]
+            if blocks:
+                parts.append(f'<div class="response-text">{"".join(blocks)}</div>')
 
         if turn.tools:
             tool_items = "\n".join(_render_tool_event(t) for t in turn.tools)
